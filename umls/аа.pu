@@ -1,0 +1,58 @@
+@startuml
+' Используем стандартную тему без кастомных шрифтов
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+left to right direction
+
+' --- СЛЕВА (ВХОД) ---
+rectangle "Входной Интерфейс" as InputSection {
+    component "Telegram Bot API" as TG #DeepSkyBlue
+}
+
+' --- ЦЕНТР (ЯДРО) ---
+rectangle "Application Core" as CoreSection {
+    component "Go Backend" as GO #Gold {
+        rectangle "Логика Агента"
+        rectangle "Парсер Команд"
+    }
+}
+
+' --- СПРАВА (СЕРВИСЫ DOCKER) ---
+rectangle "Docker Services (Infrastructure)" as ServicesSection {
+    
+    component "Ollama" as OLLAMA #LightGreen {
+        note bottom of OLLAMA
+            Инференс:
+            Gemma-2-9b
+        end note
+    }
+
+    database "Qdrant" as QDRANT #LightCoral {
+        note bottom of QDRANT
+            Long-term memory
+            (Векторная БД)
+        end note
+    }
+
+    database "Redis" as REDIS #LightGray {
+        note bottom of REDIS
+            Short-term memory
+            (Кэш диалога)
+        end note
+    }
+}
+
+' --- СВЯЗИ ---
+
+' Вход
+TG <--> GO : Webhook / Updates
+
+' Взаимодействие
+GO --> OLLAMA : Генерация ответа\n(JSON)
+GO --> QDRANT : Поиск / Сохранение\n(Векторы)
+
+' Двусторонняя связь с Redis (исправлено технически)
+GO <--> REDIS : Чтение / Запись\n(Кэш истории)
+
+@enduml

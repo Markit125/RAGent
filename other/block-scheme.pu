@@ -1,0 +1,75 @@
+@startuml
+!theme plain
+hide empty members
+
+skinparam componentStyle rectangle
+
+actor "Пользователь (Telegram)" as User
+
+package "Telegram Interface" {
+    component [Poller / Webhook Handler] as TG_Handler
+    note right of TG_Handler
+      Запускает новую 
+      **Goroutine**
+      для каждого апдейта
+    end note
+}
+
+package "Core Business Logic (Go)" {
+    component [**Orchestrator**\n(Agent Loop)] as Agent
+    
+    interface "LLM Provider Interface" as ILLM
+    interface "Memory Store Interface" as IMemory
+    
+    component [**Tool Manager**\n(Function Caller)] as Tools
+}
+
+package "Infrastructure / Adapters" {
+    component [OpenAI / Anthropic Client] as LLM_Client
+    component [Embedder Client] as Embedder
+    
+    component [Vector DB Client] as Vector_Adapter
+    component [Redis Client] as Redis_Adapter
+}
+
+database "Vector Database\n(Qdrant/Milvus)" as VDB {
+    folder "Collection: Memories" {
+        [Vectors (768/1536 dim)]
+        [Payload: text, tags, user_id]
+    }
+}
+
+database "Redis / In-Memory" as Cache {
+    [Chat History (Context)]
+    [User State]
+}
+
+cloud "LLM API" as AI_Cloud
+
+' Connections
+User <--> TG_Handler : Сообщения
+TG_Handler --> Agent : Context + UserInput
+
+Agent --> Redis_Adapter : Get/Set Short-term History
+Redis_Adapter -- Cache
+
+Agent --> ILLM : Запрос (Prompt + Tools def)
+ILLM --> LLM_Client
+LLM_Client <--> AI_Cloud : HTTP Request
+
+Agent --> Tools : Выполнить Tool (если LLM попросила)
+Tools --> IMemory : Search / Save
+IMemory --> Vector_Adapter
+Vector_Adapter <--> VDB : Semantic Search / Upsert
+
+Tools --> Embedder : Vectorize text
+Embedder <--> AI_Cloud : Get Embeddings
+
+note bottom of VDB
+  **Semantic Search:**
+  Фильтр: user_id == X
+  Поиск: Cosine Similarity
+  + Фильтрация по Tags
+end note
+
+@enduml

@@ -1,0 +1,49 @@
+@startuml
+!theme plain
+left to right direction
+skinparam linetype ortho
+
+' --- НАСТРОЙКИ СТИЛЯ (как в прошлой схеме) ---
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+
+skinparam component {
+    FontSize 16
+    FontStyle bold
+    BackgroundColor<<AI>> #98FB98
+    BackgroundColor<<GO>> #FFD700
+}
+
+skinparam file {
+    FontSize 16
+    FontStyle bold
+    BackgroundColor #E0FFFF
+    BorderColor Black
+}
+
+skinparam arrow {
+    Color Black
+    Thickness 2
+}
+
+' --- ЭЛЕМЕНТЫ ПАЙПЛАЙНА ---
+
+component "Teacher LLM\n(Gemini / GPT-4)" as TEACHER <<AI>>
+note bottom of TEACHER: Генерация сценариев\n(Prompt Engineering)
+
+file "Raw Data\n(.txt)" as RAW
+note bottom of RAW: Сырой текст диалогов\nс "мыслями"
+
+component "Go Converter\n(Custom Script)" as GOSCRIPT <<GO>>
+note bottom of GOSCRIPT: 1. Парсинг структуры\n2. Валидация типов\n3. Форматирование тегов
+
+file "Ready Dataset\n(.jsonl)" as DATASET
+note bottom of DATASET: Формат для LoRA:\n<start_of_turn>...\nCMD:SAVE...
+
+' --- СВЯЗИ ---
+
+TEACHER --> RAW : Генерирует
+RAW --> GOSCRIPT : На вход
+GOSCRIPT --> DATASET : Компилирует
+
+@enduml

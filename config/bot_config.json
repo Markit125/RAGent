@@ -1,0 +1,31 @@
+{
+  "llm": {
+    "host": "http://localhost:11434",
+    "chat_model": "my-custom-model",
+    "embed_model": "nomic-embed-text",
+    "options": {
+      "temperature": 0.6,
+      "num_ctx": 8192,
+      "num_predict": 512,
+      "top_k": 40,
+      "top_p": 0.9
+    }
+  },
+  "google": {
+    "api_key": "",
+    "cx": ""
+  },
+  "store": {
+    "host": "localhost",
+    "port": 6334,
+    "collection_name": "chatbot_memory",
+    "vector_size": 768
+  },
+  "redis": {
+    "host": "localhost:6379",
+    "password": "",
+    "db": 0,
+    "history_ttl_hours": 24
+  },
+  "system_prompt_file": "config/system_prompt.txt"
+}
